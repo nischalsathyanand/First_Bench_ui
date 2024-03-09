@@ -1,4 +1,6 @@
 import React from "react";
+import convertAndSortDates from "../utility/convertAndSortDates";
+import removeDuplicates from "../utility/removeDuplicates";
 import { inject, observer } from "mobx-react";
 import { useState, useEffect } from "react";
 import {
@@ -32,7 +34,7 @@ const Position = ({ handleStepClick }) => {
         //console.log(response)
         const newData = await response.json();
         if (newData) {
-          console.log(newData);
+          //console.log(newData);
           const processedData = [];
           newData.map((item) => {
             processedData.push({ key: item, text: item, value: item });
@@ -121,20 +123,50 @@ const Position = ({ handleStepClick }) => {
     console.log(scriptJsonData);
     const strikePriceArray = [];
     const expDateArray = [];
+
     scriptJsonData.map((item) => {
-      strikePriceArray.push({
-        key: item.strike,
-        text: item.strike,
-        value: item.strike,
+      const formattedStrike = parseFloat(item.strike / 100).toFixed(2);
+      strikePriceArray.push(formattedStrike);
+
+      /* strikePriceArray.push({
+        key: formattedStrike,
+        text: formattedStrike,
+        value: formattedStrike,
       });
-      expDateArray.push({
+
+      /*expDateArray.push({
         key: item.expiry,
         text: item.expiry,
         value: item.expiry,
+      });*/
+    });
+    const tempStrikePrice = removeDuplicates(strikePriceArray);
+    const strikePriceDropdown = [];
+    tempStrikePrice.map((item) => {
+      strikePriceDropdown.push({
+        key: item,
+        text: item,
+        value: item,
       });
     });
-    setStrike(strikePriceArray);
-    SetExpairy(expDateArray);
+
+    scriptJsonData.map((item) => {
+      expDateArray.push(item.expiry);
+    });
+
+    const tempExpdateArray = removeDuplicates(expDateArray);
+    const expiryDateArrayDropdown = [];
+    tempExpdateArray.map((item) => {
+      expiryDateArrayDropdown.push({
+        key: item,
+        text: item,
+        value: item,
+      });
+    });
+    console.log(expDateArray);
+    console.log(expiryDateArrayDropdown);
+    setStrike(strikePriceDropdown);
+    SetExpairy(expiryDateArrayDropdown);
     setIsScriptDataLoading(false);
   };
 
