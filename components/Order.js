@@ -16,12 +16,12 @@ import {
 const Order = ({ positionStore }) => {
   const [highlightedRows, setHighlightedRows] = useState([]);
   const [oldRows, setOldRows] = useState([]);
-  const currentPrice = 100;
+  const currentPrice = 3000;
   const threshold = 2000;
 
   const calculatePositive = (lastUpdate) => Date.now() - lastUpdate < threshold;
-
-  const orderRows = combineData(positionStore.buys).map((orders, index) =>
+  //combineData(positionStore.buys).map((orders, index) =>
+  const orderRows = positionStore.buys.map((orders, index) =>
     orders.cepe.map((content, contentIndex) => {
       const isPositive = calculatePositive(
         orders.sprice[contentIndex].lastUpdate
@@ -82,7 +82,7 @@ const Order = ({ positionStore }) => {
 
   return (
     <div>
-      <Table basic="very" celled structured compact>
+      <Table celled structured compact>
         <TableHeader>
           <TableRow>
             <TableHeaderCell>Script</TableHeaderCell>

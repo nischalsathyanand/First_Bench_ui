@@ -16,7 +16,7 @@ import {
 } from "semantic-ui-react";
 import buyStore from "/store/BuyStore";
 import positionStore from "/store/positionStore";
-import combineBuys from "../utility/combinedBuys";
+import combineData from "../utility/combineData";
 const Position = ({ handleStepClick }) => {
   const [price, setPrice] = useState("");
   const [iv, setIv] = useState("");
@@ -149,6 +149,8 @@ const Position = ({ handleStepClick }) => {
         value: item,
       });
     });
+    // Sort the strikePriceDropdown array based on the 'key' property
+    strikePriceDropdown.sort((a, b) => a.key - b.key);
 
     scriptJsonData.map((item) => {
       expDateArray.push(item.expiry);
@@ -163,6 +165,8 @@ const Position = ({ handleStepClick }) => {
         value: item,
       });
     });
+    // Sort the expiryDateArrayDropdown array by dates
+    expiryDateArrayDropdown.sort((a, b) => new Date(a.key) - new Date(b.key));
     console.log(expDateArray);
     console.log(expiryDateArrayDropdown);
     setStrike(strikePriceDropdown);
@@ -177,7 +181,8 @@ const Position = ({ handleStepClick }) => {
       ...order,
       lastUpdate: timestamp,
     }));
-    positionStore.buys.push(...ordersWithTimestamp);
+    //positionStore.buys.push(...ordersWithTimestamp);
+    positionStore.buys.push(...combineData(ordersWithTimestamp));
     buyStore.clearOrders();
     console.log(positionStore.buys);
     handleStepClick(0);
@@ -268,12 +273,8 @@ const Position = ({ handleStepClick }) => {
         onClick={handleSaveClick}
         disabled={buyStore.orders.length <= 0}
       >
-        SAVE{" "}
-        {buyStore.orders.length <= 0 ? (
-          ""
-        ) : (
-          <div>(+{buyStore.orders.length})</div>
-        )}
+        SAVE {buyStore.orders.length <= 0 ? "" : `(+${buyStore.orders.length})`}
+              
       </Button>
     </Form>
   );

@@ -1,5 +1,6 @@
 import LoginForm from "./components/LoginForm";
 import Home from "./components/Home";
+import SignUp from "./components/SignUp";
 import {
   BrowserRouter as Router,
   Route,
@@ -15,10 +16,11 @@ function App() {
     <Provider buyStore={buyStore} positionStore={positionStore}>
       <Router>
         <Routes>
-          <Route path="/" element={<Navigate to="/login" />}></Route>
-          <Route path="/login" Component={LoginForm}></Route>
+          <Route path="/" element={<Navigate to="/users/login" />}></Route>
+          <Route path="/users/login" Component={LoginForm}></Route>
           <Route path="/home" Component={Home}></Route>
-          <Route path="/signout" Component={LoginForm} />
+          <Route path="/users/signout" Component={LoginForm} />
+          <Route path="/users/signup" Component={SignUp} />
         </Routes>
       </Router>
     </Provider>

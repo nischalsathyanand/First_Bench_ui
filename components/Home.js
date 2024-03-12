@@ -4,6 +4,7 @@ import Order from "./Order";
 import Position from "./Position";
 import { Link, useNavigate } from "react-router-dom";
 import logoImage from "/images/fb1.png";
+import { useLocation } from "react-router-dom";
 
 import {
   Container,
@@ -24,6 +25,8 @@ import {
 } from "semantic-ui-react";
 
 function Home() {
+  const location = useLocation();
+  const { username } = location.state || {};
   const [activeStep, setActiveStep] = useState(0);
 
   const handleStepClick = (index) => {
@@ -66,11 +69,11 @@ function Home() {
 
           <Menu.Item as="b" position="right">
             <Icon name="user" />
-            User Name
+            {username}
           </Menu.Item>
           <Menu.Item as="c">
             <Icon name="sign-out" />
-            <Link to="/signout" onClick={handleSignOut}>
+            <Link to="/users/signout" onClick={handleSignOut}>
               Signout
             </Link>
           </Menu.Item>

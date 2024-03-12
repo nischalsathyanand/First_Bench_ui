@@ -12,23 +12,42 @@ import {
 import { Navigate } from "react-router-dom";
 
 const LoginForm = () => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [authenticated, setAuthenticated] = useState(false);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
-  const handleLogin = (event) => {
+
+  const handleLogin = async (event) => {
     event.preventDefault();
-    const username = event.target[0].value;
-    const password = event.target[1].value;
-    if (username == "nischal" && password == "1234") {
-      console.log("authenticated");
+    try {
+      const response = await fetch("http://localhost:3000/users/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!response.ok) {
+        const errorResponse = await response.json();
+        console.error("Login failed:", errorResponse.message);
+        throw new Error("Login failed");
+      }
+
+      // Handle successful login, e.g., redirect to dashboard
+      console.log("Login successful");
+      const result = await response.json();
+      console.log(result);
       setAuthenticated(true);
-    } else {
-      console.log("error");
+    } catch (error) {
+      console.error("Error:", error.message);
+      // Handle login error, e.g., display error message to user
       setAuthenticated(false);
       setShowErrorMessage(true);
     }
   };
   if (authenticated) {
-    return <Navigate to="/home" />;
+    return <Navigate to="/home" state={{ username }} />;
   }
   return (
     <Grid textAlign="center" style={{ height: "100vh" }} verticalAlign="middle">
@@ -44,6 +63,9 @@ const LoginForm = () => {
               iconPosition="left"
               placeholder="USER NAME"
               type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
             />
             <Form.Input
               fluid
@@ -51,6 +73,9 @@ const LoginForm = () => {
               iconPosition="left"
               placeholder="PASSWORD"
               type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
 
             <Button color="yellow" fluid size="large" type="submit">
@@ -58,6 +83,9 @@ const LoginForm = () => {
             </Button>
           </Segment>
         </Form>
+        <Message>
+          New User? <a href="/users/signup">Sign Up</a>
+        </Message>
         {showErrorMessage && (
           <Message negative>
             <MessageHeader>Invalid login</MessageHeader>
