@@ -12,7 +12,7 @@ import {
 import { Navigate } from "react-router-dom";
 
 const LoginForm = () => {
-  const [username, setUsername] = useState("");
+  const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [authenticated, setAuthenticated] = useState(false);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
@@ -25,7 +25,7 @@ const LoginForm = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ userId, password }),
       });
 
       if (!response.ok) {
@@ -47,7 +47,7 @@ const LoginForm = () => {
     }
   };
   if (authenticated) {
-    return <Navigate to="/home" state={{ username }} />;
+    return <Navigate to="/home" state={{ userId }} />;
   }
   return (
     <Grid textAlign="center" style={{ height: "100vh" }} verticalAlign="middle">
@@ -61,11 +61,11 @@ const LoginForm = () => {
               fluid
               icon="user"
               iconPosition="left"
-              placeholder="USER NAME"
+              placeholder="USER ID"
               type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              id="userid"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
             />
             <Form.Input
               fluid

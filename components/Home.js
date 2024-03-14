@@ -26,7 +26,7 @@ import {
 
 function Home() {
   const location = useLocation();
-  const { username } = location.state || {};
+  const { userId } = location.state || {};
   const [activeStep, setActiveStep] = useState(0);
 
   const handleStepClick = (index) => {
@@ -69,7 +69,7 @@ function Home() {
 
           <Menu.Item as="b" position="right">
             <Icon name="user" />
-            {username}
+            {userId}
           </Menu.Item>
           <Menu.Item as="c">
             <Icon name="sign-out" />
