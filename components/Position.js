@@ -13,6 +13,7 @@ import {
   Icon,
   Modal,
   Input,
+  Message,
 } from "semantic-ui-react";
 import buyStore from "/store/BuyStore";
 import positionStore from "/store/positionStore";
@@ -21,11 +22,15 @@ const Position = ({ handleStepClick }) => {
   const [price, setPrice] = useState("");
   const [iv, setIv] = useState("");
   const [saveButton, setSaveButton] = useState(false);
-
+  const [priceError, setPriceError] = useState(false);
+  const [ivError, setIvError] = useState(false);
   const [scriptData, setScriptData] = useState([]);
   const [strike, setStrike] = useState([]);
+  const [cepeValue, setCePeValue] = useState([]);
   const [expairy, SetExpairy] = useState([]);
   const [isScriptDataLoading, setIsScriptDataLoading] = useState(false);
+  const [scriptJsonData, setScriptJsonData] = useState([]);
+  const [expiryDate, setExpiryDate] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -83,6 +88,7 @@ const Position = ({ handleStepClick }) => {
     iv: "",
   });
   const handleAddScript = () => {
+    if (!validateInputs()) return;
     buyStore.orders.push({
       script: formData.script,
       sprice: formData.sprice,
@@ -109,6 +115,25 @@ const Position = ({ handleStepClick }) => {
       iv: "",
     });
   };
+  const validateInputs = () => {
+    let isValid = true;
+
+    if (!formData.price || isNaN(formData.price)) {
+      setPriceError(true);
+      isValid = false;
+    } else {
+      setPriceError(false);
+    }
+
+    if (!formData.iv || isNaN(formData.iv)) {
+      setIvError(true);
+      isValid = false;
+    } else {
+      setIvError(false);
+    }
+
+    return isValid;
+  };
 
   const handleScriptChange = async (e, { value }) => {
     setIsScriptDataLoading(true);
@@ -119,30 +144,18 @@ const Position = ({ handleStepClick }) => {
     if (!scriptDataResponse.ok) {
       throw new Error("Unable to get data .. error");
     }
-    const scriptJsonData = await scriptDataResponse.json();
-    console.log(scriptJsonData);
+    const data = await scriptDataResponse.json(); // Assign scriptJsonData
+    setScriptJsonData(data);
+    console.log(data);
     const strikePriceArray = [];
     const expDateArray = [];
 
-    scriptJsonData.map((item) => {
-      const formattedStrike = parseFloat(item.strike / 100).toFixed(2);
-      strikePriceArray.push(formattedStrike);
-
-      /* strikePriceArray.push({
-        key: formattedStrike,
-        text: formattedStrike,
-        value: formattedStrike,
-      });
-
-      /*expDateArray.push({
-        key: item.expiry,
-        text: item.expiry,
-        value: item.expiry,
-      });*/
+    data.forEach((item) => {
+      strikePriceArray.push(item.strike);
     });
     const tempStrikePrice = removeDuplicates(strikePriceArray);
     const strikePriceDropdown = [];
-    tempStrikePrice.map((item) => {
+    tempStrikePrice.forEach((item) => {
       strikePriceDropdown.push({
         key: item,
         text: item,
@@ -152,26 +165,49 @@ const Position = ({ handleStepClick }) => {
     // Sort the strikePriceDropdown array based on the 'key' property
     strikePriceDropdown.sort((a, b) => a.key - b.key);
 
-    scriptJsonData.map((item) => {
-      expDateArray.push(item.expiry);
-    });
-
-    const tempExpdateArray = removeDuplicates(expDateArray);
-    const expiryDateArrayDropdown = [];
-    tempExpdateArray.map((item) => {
-      expiryDateArrayDropdown.push({
-        key: item,
-        text: item,
-        value: item,
-      });
-    });
-    // Sort the expiryDateArrayDropdown array by dates
-    expiryDateArrayDropdown.sort((a, b) => new Date(a.key) - new Date(b.key));
-    console.log(expDateArray);
-    console.log(expiryDateArrayDropdown);
     setStrike(strikePriceDropdown);
-    SetExpairy(expiryDateArrayDropdown);
+
     setIsScriptDataLoading(false);
+  };
+
+  const handleStrikePriceChange = async (e, { value }) => {
+    setformData({ ...formData, sprice: value });
+
+    const selectedStrikePrice = value;
+    console.log(selectedStrikePrice);
+    const symbolsForSelectedStrike = scriptJsonData
+      .filter((item) => item.strike === selectedStrikePrice)
+      .map((item) => item.symbol);
+
+    console.log(symbolsForSelectedStrike);
+
+    const cepeDropdown = symbolsForSelectedStrike.map((symbol) => ({
+      key: symbol,
+      text: symbol,
+      value: symbol,
+    }));
+
+    setCePeValue(cepeDropdown);
+  };
+  const handleCePeChange = async (e, { value }) => {
+    setformData({ ...formData, cepe: value });
+
+    const selectedcepe = value;
+    console.log("********");
+    console.log(selectedcepe);
+    const ExpiryForSelectedCePe = scriptJsonData
+      .filter((item) => item.symbol === selectedcepe)
+      .map((item) => item.expiry);
+
+    console.log(ExpiryForSelectedCePe);
+
+    const expiryDropdown = ExpiryForSelectedCePe.map((expiry) => ({
+      key: expiry,
+      text: expiry,
+      value: expiry,
+    }));
+
+    setExpiryDate(expiryDropdown);
   };
 
   const handleSaveClick = () => {
@@ -209,9 +245,7 @@ const Position = ({ handleStepClick }) => {
           selection
           options={strike}
           value={formData.sprice}
-          onChange={(e, { value }) =>
-            setformData({ ...formData, sprice: value })
-          }
+          onChange={handleStrikePriceChange}
         />
       </FormField>
       <FormField>
@@ -220,9 +254,9 @@ const Position = ({ handleStepClick }) => {
           placeholder="ce/pe"
           fluid
           selection
-          options={cepe}
+          options={cepeValue}
           value={formData.cepe}
-          onChange={(e, { value }) => setformData({ ...formData, cepe: value })}
+          onChange={handleCePeChange}
         />
       </FormField>
       <FormField>
@@ -242,14 +276,14 @@ const Position = ({ handleStepClick }) => {
           placeholder="expdate"
           fluid
           selection
-          options={expairy}
+          options={expiryDate}
           value={formData.expdate}
           onChange={(e, { value }) =>
             setformData({ ...formData, expdate: value })
           }
         />
       </FormField>
-      <FormField>
+      <FormField error={priceError}>
         <label>Price</label>
         <Input
           value={formData.price}
@@ -257,13 +291,15 @@ const Position = ({ handleStepClick }) => {
             setformData({ ...formData, price: value })
           }
         />
+        {priceError && <Message error content="Price must be a number" />}
       </FormField>
-      <FormField>
+      <FormField error={ivError}>
         <label>Iv</label>
         <Input
           value={formData.iv}
           onChange={(e, { value }) => setformData({ ...formData, iv: value })}
         />
+        {ivError && <Message error content="Iv must be a number" />}
       </FormField>
       <Button color="green" onClick={handleAddScript}>
         ADD MORE SCRIPT
