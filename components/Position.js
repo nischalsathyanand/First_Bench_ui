@@ -14,23 +14,23 @@ import {
   Modal,
   Input,
   Message,
+  Segment,
+  Loader,
 } from "semantic-ui-react";
 import buyStore from "/store/BuyStore";
 import positionStore from "/store/positionStore";
 import combineData from "../utility/combineData";
 const Position = ({ handleStepClick }) => {
   const [price, setPrice] = useState("");
-  const [iv, setIv] = useState("");
   const [saveButton, setSaveButton] = useState(false);
   const [priceError, setPriceError] = useState(false);
   const [ivError, setIvError] = useState(false);
   const [scriptData, setScriptData] = useState([]);
   const [strike, setStrike] = useState([]);
-  const [cepeValue, setCePeValue] = useState([]);
   const [expairy, SetExpairy] = useState([]);
-  const [isScriptDataLoading, setIsScriptDataLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [scriptJsonData, setScriptJsonData] = useState([]);
-  const [expiryDate, setExpiryDate] = useState([]);
+  const [symbolToken, setSymbolToken] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -66,8 +66,8 @@ const Position = ({ handleStepClick }) => {
     { key: "4", text: "60000", value: "60000" },
   ];
   const cepe = [
-    { key: "Ce", text: "Ce", value: "Ce" },
-    { key: "Pe", text: "Pe", value: "Pe" },
+    { key: "CE", text: "CE", value: "CE" },
+    { key: "PE", text: "PE", value: "PE" },
   ];
   const bs = [
     { key: "Buy", text: "Buy", value: "Buy" },
@@ -97,6 +97,7 @@ const Position = ({ handleStepClick }) => {
       expdate: formData.expdate,
       price: formData.price,
       iv: formData.iv,
+      symbol_token: returnSymbolToken(formData.cepe),
     });
     console.log(buyStore.orders);
     toggleOrderCount(buyStore.orders.length);
@@ -136,7 +137,7 @@ const Position = ({ handleStepClick }) => {
   };
 
   const handleScriptChange = async (e, { value }) => {
-    setIsScriptDataLoading(true);
+    setIsLoading(true);
     setformData({ ...formData, script: value });
     const scriptDataResponse = await fetch(
       "http://localhost:3000/api/v1/getscriptbyname?name=" + value
@@ -144,18 +145,19 @@ const Position = ({ handleStepClick }) => {
     if (!scriptDataResponse.ok) {
       throw new Error("Unable to get data .. error");
     }
-    const data = await scriptDataResponse.json(); // Assign scriptJsonData
+    const data = await scriptDataResponse.json();
     setScriptJsonData(data);
     console.log(data);
     const strikePriceArray = [];
     const expDateArray = [];
 
-    data.forEach((item) => {
-      strikePriceArray.push(item.strike);
+    data.map((item) => {
+      const formattedStrike = parseFloat(item.strike / 100).toFixed(2);
+      strikePriceArray.push(formattedStrike);
     });
     const tempStrikePrice = removeDuplicates(strikePriceArray);
     const strikePriceDropdown = [];
-    tempStrikePrice.forEach((item) => {
+    tempStrikePrice.map((item) => {
       strikePriceDropdown.push({
         key: item,
         text: item,
@@ -165,49 +167,35 @@ const Position = ({ handleStepClick }) => {
     // Sort the strikePriceDropdown array based on the 'key' property
     strikePriceDropdown.sort((a, b) => a.key - b.key);
 
+    data.map((item) => {
+      expDateArray.push(item.expiry);
+    });
+
+    const tempExpdateArray = removeDuplicates(expDateArray);
+    const expiryDateArrayDropdown = [];
+    tempExpdateArray.map((item) => {
+      expiryDateArrayDropdown.push({
+        key: item,
+        text: item,
+        value: item,
+      });
+    });
+    // Sort the expiryDateArrayDropdown array by dates
+    expiryDateArrayDropdown.sort((a, b) => new Date(a.key) - new Date(b.key));
+    console.log(expDateArray);
+    console.log(expiryDateArrayDropdown);
     setStrike(strikePriceDropdown);
-
-    setIsScriptDataLoading(false);
+    SetExpairy(expiryDateArrayDropdown);
+    setIsLoading(false);
   };
 
-  const handleStrikePriceChange = async (e, { value }) => {
-    setformData({ ...formData, sprice: value });
-
-    const selectedStrikePrice = value;
-    console.log(selectedStrikePrice);
-    const symbolsForSelectedStrike = scriptJsonData
-      .filter((item) => item.strike === selectedStrikePrice)
-      .map((item) => item.symbol);
-
-    console.log(symbolsForSelectedStrike);
-
-    const cepeDropdown = symbolsForSelectedStrike.map((symbol) => ({
-      key: symbol,
-      text: symbol,
-      value: symbol,
-    }));
-
-    setCePeValue(cepeDropdown);
-  };
-  const handleCePeChange = async (e, { value }) => {
-    setformData({ ...formData, cepe: value });
-
-    const selectedcepe = value;
-    console.log("********");
-    console.log(selectedcepe);
-    const ExpiryForSelectedCePe = scriptJsonData
-      .filter((item) => item.symbol === selectedcepe)
-      .map((item) => item.expiry);
-
-    console.log(ExpiryForSelectedCePe);
-
-    const expiryDropdown = ExpiryForSelectedCePe.map((expiry) => ({
-      key: expiry,
-      text: expiry,
-      value: expiry,
-    }));
-
-    setExpiryDate(expiryDropdown);
+  const returnSymbolToken = (symbol) => {
+    for (const obj of scriptJsonData) {
+      if (obj.symbol === symbol) {
+        return obj.token;
+      }
+    }
+    return null; // Symbol not found
   };
 
   const handleSaveClick = () => {
@@ -238,15 +226,22 @@ const Position = ({ handleStepClick }) => {
       </FormField>
       <FormField>
         <label>Strike Price</label>
-        <Dropdown
-          placeholder="strike price"
-          loading={isScriptDataLoading}
-          fluid
-          selection
-          options={strike}
-          value={formData.sprice}
-          onChange={handleStrikePriceChange}
-        />
+        {isLoading ? ( // Show loader if isLoading is true
+          <Segment>
+            <Loader active inline="centered" size="small"></Loader>
+          </Segment>
+        ) : (
+          <Dropdown
+            placeholder="strike price"
+            fluid
+            selection
+            options={strike}
+            value={formData.sprice}
+            onChange={(e, { value }) =>
+              setformData({ ...formData, sprice: value })
+            }
+          />
+        )}
       </FormField>
       <FormField>
         <label>Ce/Pe</label>
@@ -254,9 +249,9 @@ const Position = ({ handleStepClick }) => {
           placeholder="ce/pe"
           fluid
           selection
-          options={cepeValue}
+          options={cepe}
           value={formData.cepe}
-          onChange={handleCePeChange}
+          onChange={(e, { value }) => setformData({ ...formData, cepe: value })}
         />
       </FormField>
       <FormField>
@@ -276,7 +271,7 @@ const Position = ({ handleStepClick }) => {
           placeholder="expdate"
           fluid
           selection
-          options={expiryDate}
+          options={expairy}
           value={formData.expdate}
           onChange={(e, { value }) =>
             setformData({ ...formData, expdate: value })
@@ -301,6 +296,7 @@ const Position = ({ handleStepClick }) => {
         />
         {ivError && <Message error content="Iv must be a number" />}
       </FormField>
+
       <Button color="green" onClick={handleAddScript}>
         ADD MORE SCRIPT
       </Button>
@@ -310,7 +306,6 @@ const Position = ({ handleStepClick }) => {
         disabled={buyStore.orders.length <= 0}
       >
         SAVE {buyStore.orders.length <= 0 ? "" : `(+${buyStore.orders.length})`}
-              
       </Button>
     </Form>
   );

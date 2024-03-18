@@ -3,7 +3,7 @@ import { useState } from "react";
 import Order from "./Order";
 import Position from "./Position";
 import { Link, useNavigate } from "react-router-dom";
-import logoImage from "/images/fb1.png";
+import logoImage from "/images/fb2.png";
 import { useLocation } from "react-router-dom";
 
 import {
@@ -38,7 +38,7 @@ function Home() {
     navigate("/login");
   };
   const menuStyle = {
-    backgroundColor: "#82817f",
+    backgroundColor: "#303846",
   };
 
   return (
@@ -53,7 +53,7 @@ function Home() {
                 textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)", // Adding drop shadow
                 fontFamily: "Arial, sans-serif", // Setting font family
                 fontWeight: "bold", // Making text bold
-                color: "#121212", // Setting text color
+                color: "#ffffff", // Setting text color
                 marginTop: "5px", // Adjusting margin top for better alignment
               }}
             >
@@ -86,7 +86,7 @@ function Home() {
             active={activeStep === 0}
             onClick={() => handleStepClick(0)}
             style={{
-              backgroundColor: activeStep === 0 ? "#fcb50d" : "white",
+              backgroundColor: activeStep === 0 ? "#FFC107" : "white",
             }}
           >
             <Icon name="home" />
@@ -100,7 +100,7 @@ function Home() {
             active={activeStep === 1}
             onClick={() => handleStepClick(1)}
             style={{
-              backgroundColor: activeStep === 1 ? "#fcb50d" : "white",
+              backgroundColor: activeStep === 1 ? "#FFC107" : "white",
             }}
           >
             <Icon name="add circle" />
